@@ -1,0 +1,16 @@
+[Unit]
+Description=GenerateChart MCP HTTP Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/generatechartmcpserver
+ExecStart=/opt/generatechartmcpserver/GenerateChartMcpServer
+Restart=always
+RestartSec=5
+User=generatechart
+Group=generatechart
+EnvironmentFile=-/etc/default/generatechartmcpserver
+
+[Install]
+WantedBy=multi-user.target

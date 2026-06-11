@@ -1,0 +1,68 @@
+name: Publish HTTP Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-linux-x64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish linux-x64
+        run: dotnet publish ./GenerateChartMcpServer/GenerateChartMcpServer.csproj -c Release -r linux-x64 --self-contained true -o ./artifacts/linux-x64
+
+      - name: Pack linux-x64 artifact
+        run: tar -C ./artifacts -czf ./artifacts/GenerateChartMcpServer-linux-x64.tar.gz linux-x64
+
+      - name: Upload linux-x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GenerateChartMcpServer-linux-x64
+          path: ./artifacts/GenerateChartMcpServer-linux-x64.tar.gz
+
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/generatechartmcpserver
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./GenerateChartMcpServer
+          file: ./GenerateChartMcpServer/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
