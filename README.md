@@ -19,7 +19,7 @@
 dotnet run --project GenerateChartMcpServer
 ```
 
-服务默认监听 `http://localhost:52345`，MCP 端点由 ASP.NET Core MCP 映射提供，图片通过 `/images/{filename}` 返回，健康检查为 `/health`。
+服务默认监听 `http://localhost:52345`，MCP 端点由 ASP.NET Core MCP 映射提供，图片通过 `/images/{dir}/{filename}` 返回，健康检查为 `/health`。
 
 ## 本地联调
 

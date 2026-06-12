@@ -5,11 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <Version>0.1.0-beta</Version>
+    <Version>0.1.0</Version>
     <PackageTags>AI; MCP; server; chart; plot; visualization</PackageTags>
     <Description>An HTTP MCP server that generates static chart images (bar, horizontal bar, stacked bar, line, pie, bubble) and returns signed image URLs.</Description>
     <ContainerRepository>sangyuxiaowu/generatechartmcpserver</ContainerRepository>
-    <ContainerImageTags>0.1.0-beta;latest</ContainerImageTags>
+    <ContainerImageTags>0.1.0;latest</ContainerImageTags>
   </PropertyGroup>
 
   <ItemGroup>

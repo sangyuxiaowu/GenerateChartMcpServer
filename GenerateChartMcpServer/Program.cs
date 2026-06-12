@@ -13,7 +13,7 @@ var allowedOrigins = config.GetSection("AllowedOrigins").Get<string[]>()?
 var apiKey = config["ApiKey"] ?? "";
 ChartTools.SignOptions.sToken = apiKey;
 ChartTools.SignOptions.Expire = int.TryParse(config["SignExpireSeconds"], out var exp) ? exp : 3600;
-ChartTools.ImageBaseUrl = (config["ImageBaseUrl"] ?? "http://localhost:52345/images").TrimEnd('/');
+ChartTools.ImageBaseUrl = (config["ImageBaseUrl"] ?? "http://localhost:52345").TrimEnd('/');
 ChartTools.ImageStoragePath = config["ImageStoragePath"] ?? "images";
 ChartTools.ImageExpireMonths = int.TryParse(config["ImageExpireMonths"], out var expireMonths) ? Math.Max(0, expireMonths) : 1;
 ChartTools.ContentRootPath = builder.Environment.ContentRootPath;
@@ -34,6 +34,7 @@ app.UseSignAuthorization(opt => {
     opt.Expire = ChartTools.SignOptions.Expire;
     // 一般支持长期授权，包含路径防止授权越界到其他文件
     opt.WithPath = true;
+    opt.UnauthorizedBackJson = "{\"error\":\"Unauthorized\"}";
 });
 
 var imageDir = Path.Combine(app.Environment.ContentRootPath, ChartTools.ImageStoragePath);

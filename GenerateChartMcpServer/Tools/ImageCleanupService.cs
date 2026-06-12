@@ -47,7 +47,9 @@ internal sealed class ImageCleanupService : BackgroundService
         if (!Directory.Exists(_baseImageDir))
             return;
 
-        var threshold = DateTimeOffset.UtcNow.AddMonths(-_expireMonths);
+        var now = DateTimeOffset.UtcNow;
+        var expirationMonth = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero)
+            .AddMonths(-_expireMonths);
         foreach (var directoryPath in Directory.EnumerateDirectories(_baseImageDir, "*", SearchOption.TopDirectoryOnly))
         {
             try
@@ -57,8 +59,7 @@ internal sealed class ImageCleanupService : BackgroundService
                 if (directoryStart == null)
                     continue;
 
-                var directoryEnd = directoryStart.Value.AddMonths(1).AddTicks(-1);
-                if (directoryEnd < threshold)
+                if (directoryStart.Value <= expirationMonth)
                 {
                     Directory.Delete(directoryPath, true);
                     _logger.LogInformation("Deleted expired image directory: {DirectoryPath}", directoryPath);
