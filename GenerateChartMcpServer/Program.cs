@@ -15,6 +15,7 @@ ChartTools.SignOptions.sToken = apiKey;
 ChartTools.SignOptions.Expire = int.TryParse(config["SignExpireSeconds"], out var exp) ? exp : 3600;
 ChartTools.ImageBaseUrl = (config["ImageBaseUrl"] ?? "http://localhost:52345/images").TrimEnd('/');
 ChartTools.ImageStoragePath = config["ImageStoragePath"] ?? "images";
+ChartTools.ImageExpireMonths = int.TryParse(config["ImageExpireMonths"], out var expireMonths) ? Math.Max(0, expireMonths) : 1;
 ChartTools.ContentRootPath = builder.Environment.ContentRootPath;
 ChartTools.ConfiguredFontName = config["FontName"];
 
@@ -23,19 +24,35 @@ builder.Services
     .WithHttpTransport()
     .WithTools<ChartTools>();
 
+builder.Services.AddHostedService<ImageCleanupService>();
+
 var app = builder.Build();
 
-// Serve images via endpoint with SignAuthorization
+// 配置签名授权中间件
+app.UseSignAuthorization(opt => {
+    opt.sToken = ChartTools.SignOptions.sToken;
+    opt.Expire = ChartTools.SignOptions.Expire;
+    // 一般支持长期授权，包含路径防止授权越界到其他文件
+    opt.WithPath = true;
+});
+
 var imageDir = Path.Combine(app.Environment.ContentRootPath, ChartTools.ImageStoragePath);
 Directory.CreateDirectory(imageDir);
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
-app.MapGet("/images/{filename}", (string filename) =>
+app.MapGet("/images/{**filename}", (string filename) =>
 {
-    var filePath = Path.Combine(imageDir, filename);
-    if (!File.Exists(filePath)) return Results.NotFound();
-    return Results.File(filePath, "image/png");
+    var requestedPath = Path.GetFullPath(Path.Combine(imageDir, filename));
+    var basePath = Path.GetFullPath(imageDir);
+    if (!requestedPath.StartsWith(basePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+        && !string.Equals(requestedPath, basePath, StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    if (!File.Exists(requestedPath)) return Results.NotFound();
+    return Results.File(requestedPath, "image/png");
 }).WithMetadata(new SignAuthorizeAttribute());
 
 // Apply HTTP transport protections to the MCP endpoint while leaving image delivery public.

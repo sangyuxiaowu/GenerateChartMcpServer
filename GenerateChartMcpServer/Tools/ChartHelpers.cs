@@ -13,9 +13,12 @@ internal partial class ChartTools
 
     internal static string ImageBaseUrl { get; set; } = "http://localhost:52345/images";
     internal static string ImageStoragePath { get; set; } = "images";
+    internal static int ImageExpireMonths { get; set; } = 1;
     internal static string ContentRootPath { get; set; } = Directory.GetCurrentDirectory();
     internal static string? ConfiguredFontName { get; set; }
     internal static string? FontName => ResolvedFontName.Value;
+
+    private static readonly char[] MonthCodeLetters = "abcdefghijkl".ToCharArray();
 
     internal static string SaveAndSignUrl(int w, int h, Action<Plot> build)
     {
@@ -23,15 +26,23 @@ internal partial class ChartTools
         ApplyFont(plot);
         build(plot);
         var name = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}_{Random.Shared.Next(1000, 9999)}.png";
-        var dir = Path.Combine(ContentRootPath, ImageStoragePath);
+        var dirName = GetImageDirectoryName(DateTimeOffset.UtcNow);
+        var dir = Path.Combine(ContentRootPath, ImageStoragePath, dirName);
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, name);
         plot.SavePng(path, w, h);
 
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var nonce = Guid.NewGuid().ToString("N")[..8];
-        var sign = MakeSignAuthorization.MakeSign(SignOptions.sToken, timestamp, nonce);
-        return $"{ImageBaseUrl}/{name}?timestamp={timestamp}&nonce={nonce}&signature={sign}";
+        var sign = MakeSignAuthorization.MakeSign(SignOptions.sToken, timestamp, nonce, $"/images/{dirName}/{name}");
+        return $"{ImageBaseUrl}/images/{dirName}/{name}?timestamp={timestamp}&nonce={nonce}&signature={sign}";
+    }
+
+    internal static string GetImageDirectoryName(DateTimeOffset now)
+    {
+        var year = now.Year % 100;
+        var monthIndex = Math.Clamp(now.Month - 1, 0, MonthCodeLetters.Length - 1);
+        return $"{year:D2}{MonthCodeLetters[monthIndex]}";
     }
 
     internal static string[] ParseStrArr(string json) =>

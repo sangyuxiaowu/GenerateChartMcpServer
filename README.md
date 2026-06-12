@@ -55,7 +55,8 @@ npx @modelcontextprotocol/inspector http://localhost:52345
 | `ApiKey` | MCP 端点访问密钥；为空时不校验 |
 | `AllowedOrigins` | 允许访问 MCP 端点的浏览器 `Origin` 白名单 |
 | `ImageBaseUrl` | 工具返回给客户端的图片 URL 前缀，生产环境必须配置成公网地址 |
-| `ImageStoragePath` | 图片落盘目录 |
+| `ImageStoragePath` | 图片落盘目录，目录下按 `yy[a-l]` 分月归档，例如 `24a`、`24b` |
+| `ImageExpireMonths` | 图片文件过期时间，单位月；整数，`0` 表示永不过期，默认 `1` |
 | `SignExpireSeconds` | 图片签名有效期，单位秒 |
 
 ## 平台支持
@@ -72,7 +73,7 @@ npx @modelcontextprotocol/inspector http://localhost:52345
 ```bash
 docker run --rm -p 52345:8080 \
   -e ApiKey=your-secret-key-here \
-  -e ImageBaseUrl=https://your-host.example.com/images \
+  -e ImageBaseUrl=https://your-host.example.com \
   -e AllowedOrigins__0=https://your-client.example.com \
   ghcr.io/sangyuxiaowu/generatechartmcpserver:latest
 ```
