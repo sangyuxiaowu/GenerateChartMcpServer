@@ -11,7 +11,7 @@ internal partial class ChartTools
     internal static SignAuthorizationOptions SignOptions = new();
     private static readonly Lazy<string?> ResolvedFontName = new(ResolveFontName);
 
-    internal static string ImageBaseUrl { get; set; } = "http://localhost:52345/images";
+    internal static string ImageBaseUrl { get; set; } = "http://localhost:52345";
     internal static string ImageStoragePath { get; set; } = "images";
     internal static int ImageExpireMonths { get; set; } = 1;
     internal static string ContentRootPath { get; set; } = Directory.GetCurrentDirectory();
